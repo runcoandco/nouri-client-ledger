@@ -1,0 +1,35 @@
+{
+  "client": "Example Client",
+  "summary": {
+    "totalPaid": 18500,
+    "totalPending": 7200,
+    "totalScheduled": 3000,
+    "balanceDue": 10200
+  },
+  "items": [
+    {
+      "invoiceDate": "2026-05-12",
+      "department": "Sales",
+      "description": "Reservation deposit",
+      "status": "Paid",
+      "amount": 15000,
+      "paymentDate": "2026-05-18"
+    },
+    {
+      "invoiceDate": "2026-06-03",
+      "department": "Sales",
+      "description": "Contract installment",
+      "status": "Pending",
+      "amount": 7200,
+      "paymentDate": null
+    },
+    {
+      "invoiceDate": "2026-06-25",
+      "department": "Sales",
+      "description": "Final installment",
+      "status": "Scheduled",
+      "amount": 3000,
+      "paymentDate": "2026-07-10"
+    }
+  ]
+}
