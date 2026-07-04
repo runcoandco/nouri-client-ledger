@@ -38,9 +38,11 @@ export default async function Home({ searchParams }: PageProps) {
         </div>
 
         {!key ? (
-          <EmptyState message="No valid access key was provided." />
+          <KeyEntry />
         ) : data?.error ? (
-          <EmptyState message={data.error} />
+          <>
+            <KeyEntry errorMessage={data.error} />
+          </>
         ) : (
           <>
             <section className="statement-header">
@@ -136,5 +138,49 @@ function EmptyState({ message }: { message: string }) {
       <h2>Statement unavailable</h2>
       <p>{message}</p>
     </section>
+  );
+}
+
+function KeyEntry({ errorMessage }: { errorMessage?: string }) {
+  return (
+    <>
+      <section className="entry-panel">
+        <div className="entry-copy">
+          <p className="shell-kicker">Secure access</p>
+          <h2>Enter your statement key</h2>
+          <p>
+            Use the 6-character key shared with you to open your client statement.
+          </p>
+        </div>
+
+        <form className="entry-form" method="get">
+          <label className="entry-label" htmlFor="key">
+            Access key
+          </label>
+          <input
+            autoCapitalize="characters"
+            autoComplete="off"
+            className="entry-input"
+            id="key"
+            inputMode="text"
+            maxLength={6}
+            name="key"
+            pattern="[A-Za-z0-9]{6}"
+            placeholder="ABC123"
+            required
+          />
+          <button className="entry-button" type="submit">
+            Open statement
+          </button>
+        </form>
+      </section>
+
+      {errorMessage ? (
+        <section className="auth-error statement-error">
+          <h2>Statement unavailable</h2>
+          <p>{errorMessage}</p>
+        </section>
+      ) : null}
+    </>
   );
 }
