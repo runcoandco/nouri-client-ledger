@@ -19,6 +19,7 @@ export type StatementPayload = {
   summary: StatementSummary;
   items: StatementItem[];
   error?: string;
+  debug?: string;
 };
 
 const ALLOWED_KEY = /^[A-Za-z0-9]{6}$/;
@@ -46,10 +47,21 @@ export async function fetchStatement(key: string): Promise<StatementPayload> {
       cache: "no-store",
     });
 
-    const data = (await response.json()) as Partial<StatementPayload>;
+    const raw = await response.text();
+    const contentType = response.headers.get("content-type") || "";
+
+    if (!response.ok) {
+      return emptyError(`Upstream request failed (${response.status}).`, preview(raw));
+    }
+
+    if (!contentType.toLowerCase().includes("application/json")) {
+      return emptyError("Upstream did not return JSON.", preview(raw));
+    }
+
+    const data = JSON.parse(raw) as Partial<StatementPayload>;
 
     if (data.error) {
-      return emptyError(data.error);
+      return emptyError(data.error, typeof data.debug === "string" ? data.debug : undefined);
     }
 
     return {
@@ -61,9 +73,13 @@ export async function fetchStatement(key: string): Promise<StatementPayload> {
         balanceDue: toAmount(data.summary?.balanceDue),
       },
       items: Array.isArray(data.items) ? data.items : [],
+      debug: typeof data.debug === "string" ? data.debug : undefined,
     };
-  } catch {
-    return emptyError("Could not load statement right now.");
+  } catch (error) {
+    return emptyError(
+      "Could not load statement right now.",
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
@@ -102,7 +118,7 @@ export function formatDate(value?: string | number | null) {
   });
 }
 
-function emptyError(message: string): StatementPayload {
+function emptyError(message: string, debug?: string): StatementPayload {
   return {
     client: "",
     summary: {
@@ -113,7 +129,12 @@ function emptyError(message: string): StatementPayload {
     },
     items: [],
     error: message,
+    debug,
   };
+}
+
+function preview(value: string) {
+  return value.replace(/\s+/g, " ").trim().slice(0, 280);
 }
 
 function toAmount(value: unknown) {

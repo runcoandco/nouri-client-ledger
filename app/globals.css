@@ -360,6 +360,15 @@ tbody tr:last-child td {
   margin-bottom: 0;
 }
 
+.debug-copy {
+  display: block;
+  font-family: var(--font-accent);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 880px) {
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

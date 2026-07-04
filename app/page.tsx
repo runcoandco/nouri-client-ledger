@@ -41,7 +41,7 @@ export default async function Home({ searchParams }: PageProps) {
           <KeyEntry />
         ) : data?.error ? (
           <>
-            <KeyEntry errorMessage={data.error} />
+            <KeyEntry errorMessage={data.error} debugMessage={data.debug} />
           </>
         ) : (
           <>
@@ -141,7 +141,13 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-function KeyEntry({ errorMessage }: { errorMessage?: string }) {
+function KeyEntry({
+  errorMessage,
+  debugMessage,
+}: {
+  errorMessage?: string;
+  debugMessage?: string;
+}) {
   return (
     <>
       <section className="entry-panel">
@@ -179,6 +185,7 @@ function KeyEntry({ errorMessage }: { errorMessage?: string }) {
         <section className="auth-error statement-error">
           <h2>Statement unavailable</h2>
           <p>{errorMessage}</p>
+          {debugMessage ? <code className="debug-copy">{debugMessage}</code> : null}
         </section>
       ) : null}
     </>
