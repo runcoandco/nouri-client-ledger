@@ -1,6 +1,6 @@
 import Image from "next/image";
 import aldeaInline from "../assets/aldea-inline.png";
-import { FRONTEND_UPDATED_AT } from "../lib/build-meta";
+import { RefreshControl } from "../components/refresh-control";
 import { fetchStatement, formatCurrency, formatDate, normalizeAmount, normalizeKey } from "../lib/statements";
 
 type PageProps = {
@@ -14,7 +14,6 @@ export default async function Home({ searchParams }: PageProps) {
   const key = normalizeKey(params.key);
   const data = key ? await fetchStatement(key) : null;
   const sortedItems = data?.items.length ? [...data.items].sort(sortNewestFirst) : [];
-  const frontendUpdated = formatTimestamp(new Date(FRONTEND_UPDATED_AT));
   const totalValue = totalStatementValue(data?.summary);
   const balanceValue = balanceDelta(data?.summary);
 
@@ -61,12 +60,7 @@ export default async function Home({ searchParams }: PageProps) {
                 <p className="shell-kicker">Client</p>
                 <h2>{data?.client}</h2>
               </div>
-              <div className="statement-header-actions">
-                <a className="statement-badge" href={`/?key=${key}`}>
-                  Refresh
-                </a>
-                <p className="statement-timestamp">Updated {frontendUpdated}</p>
-              </div>
+              <RefreshControl />
             </section>
 
             <section className="summary-grid">
@@ -151,15 +145,6 @@ function toSortTime(value?: string | number | null) {
   return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
 }
 
-function formatTimestamp(date: Date) {
-  return date.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function SummaryCard({
   label,

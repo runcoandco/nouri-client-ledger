@@ -281,11 +281,17 @@ th {
 
 .statement-badge {
   background: #eef2fb;
+  border: none;
   border-radius: 999px;
   color: var(--accent);
   display: inline-flex;
+  cursor: pointer;
   padding: 10px 14px;
   text-decoration: none;
+}
+
+.statement-refresh-button:hover {
+  background: #dfe7fb;
 }
 
 .statement-timestamp {
