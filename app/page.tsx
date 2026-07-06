@@ -15,6 +15,8 @@ export default async function Home({ searchParams }: PageProps) {
   const data = key ? await fetchStatement(key) : null;
   const sortedItems = data?.items.length ? [...data.items].sort(sortNewestFirst) : [];
   const frontendUpdated = formatTimestamp(new Date(FRONTEND_UPDATED_AT));
+  const totalValue = totalStatementValue(data?.summary);
+  const balanceValue = balanceDelta(data?.summary);
 
   return (
     <main className="shell-screen">
@@ -70,7 +72,7 @@ export default async function Home({ searchParams }: PageProps) {
             <section className="summary-grid">
               <SummaryCard
                 label="Total"
-                value={formatCurrency(totalStatementValue(data?.summary))}
+                value={formatCurrency(totalValue)}
                 tone="total"
               />
               <SummaryCard label="Paid" value={formatCurrency(data?.summary.totalPaid ?? 0)} tone="paid" />
@@ -81,8 +83,8 @@ export default async function Home({ searchParams }: PageProps) {
               />
               <SummaryCard
                 label="Balance due"
-                value={formatCurrency(data?.summary.balanceDue ?? 0)}
-                tone={(data?.summary.balanceDue ?? 0) < 0 ? "pending" : "due"}
+                value={formatCurrency(balanceValue)}
+                tone={balanceValue < 0 ? "pending" : "due"}
               />
             </section>
 
@@ -183,6 +185,15 @@ function totalStatementValue(summary?: {
 }) {
   if (!summary) return 0;
   return summary.totalPaid + summary.totalPending + summary.totalScheduled;
+}
+
+function balanceDelta(summary?: {
+  totalPaid: number;
+  totalPending: number;
+  totalScheduled: number;
+}) {
+  if (!summary) return 0;
+  return summary.totalPaid - totalStatementValue(summary);
 }
 
 function EmptyState({ message }: { message: string }) {
