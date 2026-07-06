@@ -1,5 +1,6 @@
 import Image from "next/image";
 import aldeaInline from "../assets/aldea-inline.png";
+import { FRONTEND_UPDATED_AT } from "../lib/build-meta";
 import { fetchStatement, formatCurrency, formatDate, normalizeAmount, normalizeKey } from "../lib/statements";
 
 type PageProps = {
@@ -12,6 +13,8 @@ export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
   const key = normalizeKey(params.key);
   const data = key ? await fetchStatement(key) : null;
+  const sortedItems = data?.items.length ? [...data.items].sort(sortNewestFirst) : [];
+  const frontendUpdated = formatTimestamp(new Date(FRONTEND_UPDATED_AT));
 
   return (
     <main className="shell-screen">
@@ -50,7 +53,7 @@ export default async function Home({ searchParams }: PageProps) {
                 <p className="shell-kicker">Client</p>
                 <h2>{data?.client}</h2>
               </div>
-              <span className="statement-badge">Live from master ledger</span>
+              <span className="statement-badge">Frontend updated {frontendUpdated}</span>
             </section>
 
             <section className="summary-grid">
@@ -79,28 +82,30 @@ export default async function Home({ searchParams }: PageProps) {
                     <th>Date</th>
                     <th>Department</th>
                     <th>Description</th>
-                    <th>Status</th>
                     <th>Amount</th>
+                    <th>Status</th>
+                    <th>Payment date</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data?.items.length ? (
-                    data.items.map((item, index) => (
+                  {sortedItems.length ? (
+                    sortedItems.map((item, index) => (
                       <tr key={`${item.invoiceDate}-${item.description}-${index}`}>
                         <td>{formatDate(item.invoiceDate)}</td>
                         <td>{item.department || "—"}</td>
                         <td>{item.description || "—"}</td>
+                        <td>{formatCurrency(normalizeAmount(item.amount))}</td>
                         <td>
                           <span className={`status-chip status-${(item.status || "").toLowerCase()}`}>
                             {item.status || "Unknown"}
                           </span>
                         </td>
-                        <td>{formatCurrency(normalizeAmount(item.amount))}</td>
+                        <td>{formatDate(item.paymentDate)}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="empty-row">
+                      <td colSpan={6} className="empty-row">
                         No ledger items found.
                       </td>
                     </tr>
@@ -113,6 +118,34 @@ export default async function Home({ searchParams }: PageProps) {
       </section>
     </main>
   );
+}
+
+function sortNewestFirst(a: {
+  invoiceDate?: string | number | null;
+}, b: {
+  invoiceDate?: string | number | null;
+}) {
+  return toSortTime(b.invoiceDate) - toSortTime(a.invoiceDate);
+}
+
+function toSortTime(value?: string | number | null) {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") {
+    const serialBase = new Date(Date.UTC(1899, 11, 30));
+    return serialBase.getTime() + value * 24 * 60 * 60 * 1000;
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
+
+function formatTimestamp(date: Date) {
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function SummaryCard({

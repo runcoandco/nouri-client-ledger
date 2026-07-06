@@ -12,9 +12,10 @@
   --accent: #294586;
   --accent-hover: #1f3364;
   --success: #5a7a52;
-  --warning: #9c6c2f;
+  --warning: #d2a11b;
   --danger: #a0453a;
   --danger-bg: #f5e6e4;
+  --warning-bg: #f8efc7;
   --radius: 8px;
   --radius-lg: 12px;
   --font-head: "Instrument Serif", serif;
@@ -288,8 +289,14 @@ th {
   color: var(--success);
 }
 
-.summary-card-pending strong,
-.summary-card-scheduled strong,
+.summary-card-pending strong {
+  color: var(--danger);
+}
+
+.summary-card-scheduled strong {
+  color: var(--warning);
+}
+
 .summary-card-due strong {
   color: var(--accent);
 }
@@ -337,9 +344,14 @@ tbody tr:last-child td {
   color: var(--success);
 }
 
-.status-pending,
+.status-pending {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
 .status-scheduled {
-  color: var(--warning);
+  background: var(--warning-bg);
+  color: #9b770d;
 }
 
 .auth-error {
