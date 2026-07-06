@@ -53,7 +53,12 @@ export default async function Home({ searchParams }: PageProps) {
                 <p className="shell-kicker">Client</p>
                 <h2>{data?.client}</h2>
               </div>
-              <span className="statement-badge">Frontend updated {frontendUpdated}</span>
+              <div className="statement-header-actions">
+                <a className="statement-badge" href={`/?key=${key}`}>
+                  Refresh
+                </a>
+                <p className="statement-timestamp">Updated {frontendUpdated}</p>
+              </div>
             </section>
 
             <section className="summary-grid">

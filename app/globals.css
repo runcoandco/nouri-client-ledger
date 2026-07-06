@@ -251,11 +251,26 @@ th {
   padding: 24px 24px 20px;
 }
 
+.statement-header-actions {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .statement-badge {
   background: #eef2fb;
   border-radius: 999px;
   color: var(--accent);
+  display: inline-flex;
   padding: 10px 14px;
+  text-decoration: none;
+}
+
+.statement-timestamp {
+  color: var(--text-mid);
+  font-size: 12px;
+  margin: 0;
 }
 
 .summary-grid {
@@ -400,6 +415,10 @@ tbody tr:last-child td {
   .statement-header,
   .entry-panel {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .statement-header-actions {
     align-items: flex-start;
   }
 
