@@ -36,7 +36,13 @@ export default async function Home({ searchParams }: PageProps) {
             </p>
           </div>
           <div className="shell-meta shell-meta-single">
-            <span>Ledger View</span>
+            <a aria-label="Sign out" className="signout-chip" href="/">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 17l5-5-5-5" />
+                <path d="M15 12H3" />
+                <path d="M21 21V3" />
+              </svg>
+            </a>
           </div>
         </div>
 
@@ -62,12 +68,12 @@ export default async function Home({ searchParams }: PageProps) {
             </section>
 
             <section className="summary-grid">
-              <SummaryCard label="Paid" value={formatCurrency(data?.summary.totalPaid ?? 0)} tone="paid" />
               <SummaryCard
-                label="Pending"
-                value={formatCurrency(data?.summary.totalPending ?? 0)}
-                tone="pending"
+                label="Total"
+                value={formatCurrency(totalStatementValue(data?.summary))}
+                tone="total"
               />
+              <SummaryCard label="Paid" value={formatCurrency(data?.summary.totalPaid ?? 0)} tone="paid" />
               <SummaryCard
                 label="Scheduled"
                 value={formatCurrency(data?.summary.totalScheduled ?? 0)}
@@ -76,7 +82,7 @@ export default async function Home({ searchParams }: PageProps) {
               <SummaryCard
                 label="Balance due"
                 value={formatCurrency(data?.summary.balanceDue ?? 0)}
-                tone="due"
+                tone={(data?.summary.balanceDue ?? 0) < 0 ? "pending" : "due"}
               />
             </section>
 
@@ -160,7 +166,7 @@ function SummaryCard({
 }: {
   label: string;
   value: string;
-  tone: "paid" | "pending" | "scheduled" | "due";
+  tone: "total" | "paid" | "pending" | "scheduled" | "due";
 }) {
   return (
     <article className={`summary-card summary-card-${tone}`}>
@@ -168,6 +174,15 @@ function SummaryCard({
       <strong>{value}</strong>
     </article>
   );
+}
+
+function totalStatementValue(summary?: {
+  totalPaid: number;
+  totalPending: number;
+  totalScheduled: number;
+}) {
+  if (!summary) return 0;
+  return summary.totalPaid + summary.totalPending + summary.totalScheduled;
 }
 
 function EmptyState({ message }: { message: string }) {

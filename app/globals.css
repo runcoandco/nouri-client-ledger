@@ -160,6 +160,27 @@ th {
   padding: 10px 14px;
 }
 
+.signout-chip {
+  align-items: center;
+  background: var(--surface-warm);
+  border-radius: 999px;
+  display: inline-flex;
+  height: 52px;
+  justify-content: center;
+  text-decoration: none;
+  width: 52px;
+}
+
+.signout-chip svg {
+  fill: none;
+  height: 22px;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 22px;
+}
+
 .shell-meta-single {
   justify-content: flex-end;
 }
@@ -302,6 +323,10 @@ th {
 
 .summary-card-paid strong {
   color: var(--success);
+}
+
+.summary-card-total strong {
+  color: var(--accent);
 }
 
 .summary-card-pending strong {
