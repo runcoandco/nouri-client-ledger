@@ -95,6 +95,33 @@ export function normalizeAmount(value: unknown) {
   return toAmount(value);
 }
 
+export function summarizeItems(items: StatementItem[]): StatementSummary {
+  return items.reduce(
+    (acc, item) => {
+      const amount = toAmount(item.amount);
+      const status = String(item.status || "").trim().toLowerCase();
+
+      if (status === "paid") acc.totalPaid += amount;
+      else if (status === "scheduled") acc.totalScheduled += amount;
+      else acc.totalPending += amount;
+
+      acc.balanceDue = acc.totalPending + acc.totalScheduled;
+      return acc;
+    },
+    {
+      totalPaid: 0,
+      totalPending: 0,
+      totalScheduled: 0,
+      balanceDue: 0,
+    }
+  );
+}
+
+export function filterItemsToCurrentMonth(items: StatementItem[], now = new Date()) {
+  const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+  return items.filter((item) => toTimestamp(item.invoiceDate) <= endOfCurrentMonth);
+}
+
 export function formatDate(value?: string | number | null) {
   if (value === null || value === undefined || value === "") return "";
 
@@ -135,6 +162,18 @@ function emptyError(message: string, debug?: string): StatementPayload {
 
 function preview(value: string) {
   return value.replace(/\s+/g, " ").trim().slice(0, 280);
+}
+
+function toTimestamp(value?: string | number | null) {
+  if (value === null || value === undefined || value === "") return 0;
+
+  if (typeof value === "number") {
+    const serialBase = new Date(Date.UTC(1899, 11, 30));
+    return serialBase.getTime() + value * 24 * 60 * 60 * 1000;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
 }
 
 function toAmount(value: unknown) {

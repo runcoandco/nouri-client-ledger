@@ -1,7 +1,15 @@
 import Image from "next/image";
 import aldeaInline from "../assets/aldea-inline.png";
 import { RefreshControl } from "../components/refresh-control";
-import { fetchStatement, formatCurrency, formatDate, normalizeAmount, normalizeKey } from "../lib/statements";
+import {
+  fetchStatement,
+  filterItemsToCurrentMonth,
+  formatCurrency,
+  formatDate,
+  normalizeAmount,
+  normalizeKey,
+  summarizeItems,
+} from "../lib/statements";
 
 type PageProps = {
   searchParams: Promise<{
@@ -13,9 +21,10 @@ export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
   const key = normalizeKey(params.key);
   const data = key ? await fetchStatement(key) : null;
-  const sortedItems = data?.items.length ? [...data.items].sort(sortNewestFirst) : [];
-  const totalValue = totalStatementValue(data?.summary);
-  const balanceValue = balanceDelta(data?.summary);
+  const filteredItems = data?.items.length ? filterItemsToCurrentMonth(data.items) : [];
+  const sortedItems = filteredItems.length ? [...filteredItems].sort(sortNewestFirst) : [];
+  const visibleSummary = summarizeItems(filteredItems);
+  const balanceValue = balanceDelta(visibleSummary);
 
   return (
     <main className="shell-screen">
@@ -66,13 +75,13 @@ export default async function Home({ searchParams }: PageProps) {
             <section className="summary-grid">
               <SummaryCard
                 label="Total"
-                value={formatCurrency(totalValue)}
+                value={formatCurrency(totalStatementValue(visibleSummary))}
                 tone="total"
               />
-              <SummaryCard label="Paid" value={formatCurrency(data?.summary.totalPaid ?? 0)} tone="paid" />
+              <SummaryCard label="Paid" value={formatCurrency(visibleSummary.totalPaid)} tone="paid" />
               <SummaryCard
                 label="Scheduled"
-                value={formatCurrency(data?.summary.totalScheduled ?? 0)}
+                value={formatCurrency(visibleSummary.totalScheduled)}
                 tone="scheduled"
               />
               <SummaryCard
