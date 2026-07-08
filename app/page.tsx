@@ -8,6 +8,7 @@ import {
   formatDate,
   normalizeAmount,
   normalizeKey,
+  sumPaidItems,
   summarizeItems,
 } from "../lib/statements";
 
@@ -21,10 +22,13 @@ export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
   const key = normalizeKey(params.key);
   const data = key ? await fetchStatement(key) : null;
-  const filteredItems = data?.items.length ? filterItemsToCurrentMonth(data.items) : [];
+  const allItems = data?.items ?? [];
+  const filteredItems = allItems.length ? filterItemsToCurrentMonth(allItems) : [];
   const sortedItems = filteredItems.length ? [...filteredItems].sort(sortNewestFirst) : [];
   const visibleSummary = summarizeItems(filteredItems);
-  const balanceValue = balanceDelta(visibleSummary);
+  const paidAllTime = sumPaidItems(allItems);
+  const currentMonthTotal = totalStatementValue(visibleSummary);
+  const balanceValue = balanceDelta(currentMonthTotal, paidAllTime);
 
   return (
     <main className="shell-screen">
@@ -75,10 +79,10 @@ export default async function Home({ searchParams }: PageProps) {
             <section className="summary-grid">
               <SummaryCard
                 label="Total"
-                value={formatCurrency(totalStatementValue(visibleSummary))}
+                value={formatCurrency(currentMonthTotal)}
                 tone="total"
               />
-              <SummaryCard label="Paid" value={formatCurrency(visibleSummary.totalPaid)} tone="paid" />
+              <SummaryCard label="Paid" value={formatCurrency(paidAllTime)} tone="paid" />
               <SummaryCard
                 label="Scheduled"
                 value={formatCurrency(visibleSummary.totalScheduled)}
@@ -181,13 +185,8 @@ function totalStatementValue(summary?: {
   return summary.totalPaid + summary.totalPending + summary.totalScheduled;
 }
 
-function balanceDelta(summary?: {
-  totalPaid: number;
-  totalPending: number;
-  totalScheduled: number;
-}) {
-  if (!summary) return 0;
-  return summary.totalPaid - totalStatementValue(summary);
+function balanceDelta(total = 0, paid = 0) {
+  return paid - total;
 }
 
 function EmptyState({ message }: { message: string }) {
