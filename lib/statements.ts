@@ -122,6 +122,13 @@ export function filterItemsToCurrentMonth(items: StatementItem[], now = new Date
   return items.filter((item) => toTimestamp(item.invoiceDate) <= endOfCurrentMonth);
 }
 
+export function sumPaidItems(items: StatementItem[]) {
+  return items.reduce((total, item) => {
+    const status = String(item.status || "").trim().toLowerCase();
+    return status === "paid" ? total + toAmount(item.amount) : total;
+  }, 0);
+}
+
 export function formatDate(value?: string | number | null) {
   if (value === null || value === undefined || value === "") return "";
 
