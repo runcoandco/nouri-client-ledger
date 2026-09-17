@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { LoadingIndicator } from "./loading-indicator";
 
 function formatRefreshTimestamp(value: Date) {
   return value.toLocaleString(undefined, {
@@ -13,26 +14,29 @@ function formatRefreshTimestamp(value: Date) {
   });
 }
 
-export function RefreshControl() {
+export function RefreshControl({ loadedAt }: { loadedAt: string }) {
   const router = useRouter();
-  const [lastRefresh, setLastRefresh] = useState(() => formatRefreshTimestamp(new Date()));
+  const [lastRefresh, setLastRefresh] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    setLastRefresh(formatRefreshTimestamp(new Date(loadedAt)));
+    setIsRefreshing(false);
+  }, [loadedAt]);
 
   function handleRefresh() {
     setIsRefreshing(true);
-    setLastRefresh(formatRefreshTimestamp(new Date()));
-    router.refresh();
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 800);
+    startTransition(() => router.refresh());
   }
 
   return (
     <div className="statement-header-actions">
-      <button className="statement-badge statement-refresh-button" onClick={handleRefresh} type="button">
+      <button className="statement-badge statement-refresh-button" disabled={isRefreshing} onClick={handleRefresh} type="button">
         {isRefreshing ? "Refreshing" : "Refresh"}
       </button>
-      <p className="statement-timestamp">Updated {lastRefresh}</p>
+      <p className="statement-timestamp">{lastRefresh ? `Updated ${lastRefresh}` : ""}</p>
+      {isRefreshing ? <LoadingIndicator message="Refreshing your statement" /> : null}
     </div>
   );
 }
