@@ -1,5 +1,8 @@
 import Image from "next/image";
+import { Suspense } from "react";
 import aldeaInline from "../assets/aldea-inline.png";
+import { KeyEntry } from "../components/key-entry";
+import { LoadingIndicator } from "../components/loading-indicator";
 import { RefreshControl } from "../components/refresh-control";
 import {
   fetchStatement,
@@ -21,26 +24,13 @@ type PageProps = {
 export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
   const key = normalizeKey(params.key);
-  const data = key ? await fetchStatement(key) : null;
-  const allItems = data?.items ?? [];
-  const filteredItems = allItems.length ? filterItemsToCurrentMonth(allItems) : [];
-  const sortedItems = filteredItems.length ? [...filteredItems].sort(sortNewestFirst) : [];
-  const visibleSummary = summarizeItems(filteredItems);
-  const paidAllTime = sumPaidItems(allItems);
-  const currentMonthTotal = totalStatementValue(visibleSummary);
-  const balanceValue = balanceDelta(currentMonthTotal, paidAllTime);
 
   return (
     <main className="shell-screen">
       <section className="shell-panel">
         <div className="statement-topbar">
           <div>
-            <Image
-              alt="ALDEA"
-              className="brand-logo"
-              priority
-              src={aldeaInline}
-            />
+            <Image alt="ALDEA" className="brand-logo" priority src={aldeaInline} />
             <p className="brand">Client finance</p>
             <h1>Statement</h1>
             <p className="statement-copy">
@@ -60,20 +50,42 @@ export default async function Home({ searchParams }: PageProps) {
           </div>
         </div>
 
-        {!key ? (
-          <KeyEntry />
-        ) : data?.error ? (
-          <>
-            <KeyEntry errorMessage={data.error} debugMessage={data.debug} />
-          </>
+        {key ? (
+          <Suspense key={key} fallback={<LoadingIndicator message="Opening your statement" />}>
+            <StatementContent accessKey={key} />
+          </Suspense>
         ) : (
-          <>
+          <KeyEntry />
+        )}
+      </section>
+    </main>
+  );
+}
+
+async function StatementContent({ accessKey }: { accessKey: string }) {
+  const data = await fetchStatement(accessKey);
+  const loadedAt = new Date().toISOString();
+
+  if (data.error) {
+    return <KeyEntry errorMessage={data.error} />;
+  }
+
+  const allItems = data?.items ?? [];
+  const filteredItems = allItems.length ? filterItemsToCurrentMonth(allItems) : [];
+  const sortedItems = filteredItems.length ? [...filteredItems].sort(sortNewestFirst) : [];
+  const visibleSummary = summarizeItems(filteredItems);
+  const paidAllTime = sumPaidItems(allItems);
+  const currentMonthTotal = totalStatementValue(visibleSummary);
+  const balanceValue = balanceDelta(currentMonthTotal, paidAllTime);
+
+  return (
+    <>
             <section className="statement-header">
               <div>
                 <p className="shell-kicker">Client</p>
                 <h2>{data?.client}</h2>
               </div>
-              <RefreshControl />
+              <RefreshControl loadedAt={loadedAt} />
             </section>
 
             <section className="summary-grid">
@@ -133,10 +145,7 @@ export default async function Home({ searchParams }: PageProps) {
                 </tbody>
               </table>
             </section>
-          </>
-        )}
-      </section>
-    </main>
+    </>
   );
 }
 
@@ -187,64 +196,4 @@ function totalStatementValue(summary?: {
 
 function balanceDelta(total = 0, paid = 0) {
   return paid - total;
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <section className="auth-error statement-error">
-      <h2>Statement unavailable</h2>
-      <p>{message}</p>
-    </section>
-  );
-}
-
-function KeyEntry({
-  errorMessage,
-  debugMessage,
-}: {
-  errorMessage?: string;
-  debugMessage?: string;
-}) {
-  return (
-    <>
-      <section className="entry-panel">
-        <div className="entry-copy">
-          <p className="shell-kicker">Secure access</p>
-          <h2>Enter your statement key</h2>
-          <p>
-            Use the 6-character key shared with you to open your client statement.
-          </p>
-        </div>
-
-        <form className="entry-form" method="get">
-          <label className="entry-label" htmlFor="key">
-            Access key
-          </label>
-          <input
-            autoCapitalize="characters"
-            autoComplete="off"
-            className="entry-input"
-            id="key"
-            inputMode="text"
-            maxLength={6}
-            name="key"
-            pattern="[A-Za-z0-9]{6}"
-            placeholder="ABC123"
-            required
-          />
-          <button className="entry-button" type="submit">
-            Open statement
-          </button>
-        </form>
-      </section>
-
-      {errorMessage ? (
-        <section className="auth-error statement-error">
-          <h2>Statement unavailable</h2>
-          <p>{errorMessage}</p>
-          {debugMessage ? <code className="debug-copy">{debugMessage}</code> : null}
-        </section>
-      ) : null}
-    </>
-  );
 }
