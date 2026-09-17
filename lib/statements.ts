@@ -43,8 +43,8 @@ export async function fetchStatement(key: string): Promise<StatementPayload> {
     url.searchParams.set("key", key);
 
     const response = await fetch(url.toString(), {
-      next: { revalidate: 0 },
       cache: "no-store",
+      signal: AbortSignal.timeout(25000),
     });
 
     const raw = await response.text();
@@ -77,7 +77,9 @@ export async function fetchStatement(key: string): Promise<StatementPayload> {
     };
   } catch (error) {
     return emptyError(
-      "Could not load statement right now.",
+      error instanceof Error && error.name === "TimeoutError"
+        ? "The ledger is taking too long to respond. Please try again."
+        : "Could not load statement right now.",
       error instanceof Error ? error.message : String(error)
     );
   }
